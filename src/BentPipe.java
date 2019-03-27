@@ -1,6 +1,6 @@
 class BentPipe extends Pipe {
-    BentPipe(String type) {
-        super(type + ".png");
+    BentPipe(boolean isStatic, String type) {
+        super((isStatic ? "s_" : "") + type + ".png");
         switch (type) {
             case "00":
                 setValues(-4, 0, -1, 0);

@@ -1,4 +1,5 @@
 import javafx.application.Application;
+import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
@@ -25,6 +26,7 @@ public class Main extends Application {
             e.printStackTrace();
         }
         GridPane mainGrid = new GridPane();
+        Scene mainScene = new Scene(mainGrid);
         // assert levelScanner != null;
         while (levelScanner.hasNext()) {
             String[] inputArgs = levelScanner.nextLine().split(",");
@@ -33,17 +35,35 @@ public class Main extends Application {
             int column = index % 4;
             Pipe pipeToAdd;
             ImageView pepe = new ImageView("file:res/pepe.png");
-            if (inputArgs[1].equals("Pipe")) {
+            pepe.fitWidthProperty().bind(mainScene.widthProperty().divide(4.0));
+            pepe.fitHeightProperty().bind(mainScene.heightProperty().divide(4.0));
+            pepe.setPreserveRatio(true);
+            if (inputArgs[1].startsWith("Pipe")) {
+                boolean isStatic = inputArgs[1].length() > 4;
                 if (inputArgs[2].equals("Vertical"))
-                    pipeToAdd = new VerticalPipe();
+                    pipeToAdd = new VerticalPipe(isStatic);
                 else if (inputArgs[2].equals("Horizontal"))
-                    pipeToAdd = new HorizontalPipe();
+                    pipeToAdd = new HorizontalPipe(isStatic);
                 else
-                    pipeToAdd = new BentPipe(inputArgs[2]);
-
+                    pipeToAdd = new BentPipe(isStatic, inputArgs[2]);
+                pipeToAdd.fitWidthProperty().bind(mainScene.widthProperty().divide(4.0));
+                pipeToAdd.fitHeightProperty().bind(mainScene.heightProperty().divide(4.0));
+                pipeToAdd.setPreserveRatio(true);
                 mainGrid.add(pipeToAdd, column, row);
-            }
-            else {
+            } else if (inputArgs[1].equals("Starter")) {
+                pipeToAdd = new StartPipe(inputArgs[2].equals("Vertical"));
+                //TODO eliminate copy-pasted code
+                pipeToAdd.fitWidthProperty().bind(mainScene.widthProperty().divide(4.0));
+                pipeToAdd.fitHeightProperty().bind(mainScene.heightProperty().divide(4.0));
+                pipeToAdd.setPreserveRatio(true);
+                mainGrid.add(pipeToAdd, column, row);
+            } else if (inputArgs[1].equals("End")) {
+                pipeToAdd = new EndPipe(inputArgs[2].equals("Vertical"));
+                pipeToAdd.fitWidthProperty().bind(mainScene.widthProperty().divide(4.0));
+                pipeToAdd.fitHeightProperty().bind(mainScene.heightProperty().divide(4.0));
+                pipeToAdd.setPreserveRatio(true);
+                mainGrid.add(pipeToAdd, column, row);
+            } else {
                 mainGrid.add(pepe, column, row);
             }
         }
@@ -72,8 +92,7 @@ public class Main extends Application {
             currentBox += moveValue;
         }
         System.out.println(currentBox);
-
-        Scene mainScene = new Scene(mainGrid);
+        mainGrid.setAlignment(Pos.CENTER);
         stage.setScene(mainScene);
         stage.show();
     }

@@ -15,7 +15,7 @@ public abstract class Pipe extends ImageView {
     static final int TOP = 2;
     static final int BOTTOM = 3;
 
-    //int type;
+    boolean isStatic = false;
     int[] values = new int[4];
 
     public Pipe(String fileName) {
