@@ -21,8 +21,7 @@ public class Main extends Application {
         Scanner levelScanner = null;
         try {
             levelScanner = new Scanner(level1);
-        }
-        catch (FileNotFoundException e) {
+        } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
         GridPane mainGrid = new GridPane();
@@ -50,20 +49,23 @@ public class Main extends Application {
                 pipeToAdd.fitHeightProperty().bind(mainScene.heightProperty().divide(4.0));
                 pipeToAdd.setPreserveRatio(true);
                 mainGrid.add(pipeToAdd, column, row);
-            } else if (inputArgs[1].equals("Starter")) {
+            }
+            else if (inputArgs[1].equals("Starter")) {
                 pipeToAdd = new StartPipe(inputArgs[2].equals("Vertical"));
                 //TODO eliminate copy-pasted code
                 pipeToAdd.fitWidthProperty().bind(mainScene.widthProperty().divide(4.0));
                 pipeToAdd.fitHeightProperty().bind(mainScene.heightProperty().divide(4.0));
                 pipeToAdd.setPreserveRatio(true);
                 mainGrid.add(pipeToAdd, column, row);
-            } else if (inputArgs[1].equals("End")) {
+            }
+            else if (inputArgs[1].equals("End")) {
                 pipeToAdd = new EndPipe(inputArgs[2].equals("Vertical"));
                 pipeToAdd.fitWidthProperty().bind(mainScene.widthProperty().divide(4.0));
                 pipeToAdd.fitHeightProperty().bind(mainScene.heightProperty().divide(4.0));
                 pipeToAdd.setPreserveRatio(true);
                 mainGrid.add(pipeToAdd, column, row);
-            } else {
+            }
+            else {
                 mainGrid.add(pepe, column, row);
             }
         }
