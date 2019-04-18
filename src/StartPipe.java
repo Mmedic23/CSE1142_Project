@@ -1,4 +1,4 @@
-public class StartPipe extends Pipe {
+public class StartPipe extends Tile {
     StartPipe(boolean isVertical) {
         super("start_" + (isVertical ? "vertical" : "horizontal") + ".png");
         if (isVertical)

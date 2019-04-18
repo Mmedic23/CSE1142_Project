@@ -1,4 +1,4 @@
-class BentPipe extends Pipe {
+class BentPipe extends Tile {
     BentPipe(boolean isStatic, String type) {
         super((isStatic ? "s_" : "") + type + ".png");
         switch (type) {

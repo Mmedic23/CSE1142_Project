@@ -26,44 +26,49 @@ public class Main extends Application {
         }
         GridPane mainGrid = new GridPane();
         Scene mainScene = new Scene(mainGrid);
+        int startPipe = 0;
+        int endPipe = 0;
         // assert levelScanner != null;
         while (levelScanner.hasNext()) {
             String[] inputArgs = levelScanner.nextLine().split(",");
             int index = (Integer.parseInt(inputArgs[0]) - 1);
             int row = index / 4;
             int column = index % 4;
-            Pipe pipeToAdd;
+            Tile tileToAdd;
             ImageView pepe = new ImageView("file:res/pepe.png");
             pepe.fitWidthProperty().bind(mainScene.widthProperty().divide(4.0));
             pepe.fitHeightProperty().bind(mainScene.heightProperty().divide(4.0));
             pepe.setPreserveRatio(true);
-            if (inputArgs[1].startsWith("Pipe")) {
+
+            if (inputArgs[1].startsWith("Tile")) {
                 boolean isStatic = inputArgs[1].length() > 4;
                 if (inputArgs[2].equals("Vertical"))
-                    pipeToAdd = new VerticalPipe(isStatic);
+                    tileToAdd = new VerticalPipe(isStatic);
                 else if (inputArgs[2].equals("Horizontal"))
-                    pipeToAdd = new HorizontalPipe(isStatic);
+                    tileToAdd = new HorizontalPipe(isStatic);
                 else
-                    pipeToAdd = new BentPipe(isStatic, inputArgs[2]);
-                pipeToAdd.fitWidthProperty().bind(mainScene.widthProperty().divide(4.0));
-                pipeToAdd.fitHeightProperty().bind(mainScene.heightProperty().divide(4.0));
-                pipeToAdd.setPreserveRatio(true);
-                mainGrid.add(pipeToAdd, column, row);
+                    tileToAdd = new BentPipe(isStatic, inputArgs[2]);
+                tileToAdd.fitWidthProperty().bind(mainScene.widthProperty().divide(4.0));
+                tileToAdd.fitHeightProperty().bind(mainScene.heightProperty().divide(4.0));
+                tileToAdd.setPreserveRatio(true);
+                mainGrid.add(tileToAdd, column, row);
             }
             else if (inputArgs[1].equals("Starter")) {
-                pipeToAdd = new StartPipe(inputArgs[2].equals("Vertical"));
+                tileToAdd = new StartPipe(inputArgs[2].equals("Vertical"));
                 //TODO eliminate copy-pasted code
-                pipeToAdd.fitWidthProperty().bind(mainScene.widthProperty().divide(4.0));
-                pipeToAdd.fitHeightProperty().bind(mainScene.heightProperty().divide(4.0));
-                pipeToAdd.setPreserveRatio(true);
-                mainGrid.add(pipeToAdd, column, row);
+                tileToAdd.fitWidthProperty().bind(mainScene.widthProperty().divide(4.0));
+                tileToAdd.fitHeightProperty().bind(mainScene.heightProperty().divide(4.0));
+                tileToAdd.setPreserveRatio(true);
+                mainGrid.add(tileToAdd, column, row);
+                startPipe = row * 4 + column;
             }
             else if (inputArgs[1].equals("End")) {
-                pipeToAdd = new EndPipe(inputArgs[2].equals("Vertical"));
-                pipeToAdd.fitWidthProperty().bind(mainScene.widthProperty().divide(4.0));
-                pipeToAdd.fitHeightProperty().bind(mainScene.heightProperty().divide(4.0));
-                pipeToAdd.setPreserveRatio(true);
-                mainGrid.add(pipeToAdd, column, row);
+                tileToAdd = new EndPipe(inputArgs[2].equals("Vertical"));
+                tileToAdd.fitWidthProperty().bind(mainScene.widthProperty().divide(4.0));
+                tileToAdd.fitHeightProperty().bind(mainScene.heightProperty().divide(4.0));
+                tileToAdd.setPreserveRatio(true);
+                mainGrid.add(tileToAdd, column, row);
+                endPipe = row * 4 + column;
             }
             else {
                 mainGrid.add(pepe, column, row);
@@ -72,19 +77,19 @@ public class Main extends Application {
 
         int lastBox = 0;
         int currentBox = 4;
-        while (currentBox != 13) {
+        while (currentBox != endPipe) {
             int diff = currentBox - lastBox;
             int enteredFrom;
             if (diff == 4)
-                enteredFrom = Pipe.TOP;
+                enteredFrom = Tile.TOP;
             else if (diff == 1)
-                enteredFrom = Pipe.LEFT;
+                enteredFrom = Tile.LEFT;
             else if (diff == -1)
-                enteredFrom = Pipe.RIGHT;
+                enteredFrom = Tile.RIGHT;
             else
-                enteredFrom = Pipe.BOTTOM;
+                enteredFrom = Tile.BOTTOM;
 
-            int moveValue = ((Pipe) mainGrid.getChildren().get(currentBox)).values[enteredFrom];
+            int moveValue = ((Tile) mainGrid.getChildren().get(currentBox)).values[enteredFrom];
             if (moveValue == 0) {
                 currentBox = lastBox;
                 break;

@@ -1,4 +1,4 @@
-public class EndPipe extends Pipe {
+public class EndPipe extends Tile {
     EndPipe(boolean isVertical) {
         super("end_" + (isVertical ? "vertical" : "horizontal") + ".png");
         //TODO these values should be reconsidered for balls getting stuck on a previous pipe vs.

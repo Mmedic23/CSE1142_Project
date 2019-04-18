@@ -1,6 +1,6 @@
 import javafx.scene.image.ImageView;
 
-public abstract class Pipe extends ImageView {
+public abstract class Tile extends ImageView {
     /*
     public static final int VERTICAL = 0;
     public static final int HORIZONTAL = 1;
@@ -18,7 +18,7 @@ public abstract class Pipe extends ImageView {
     boolean isStatic = false;
     int[] values = new int[4];
 
-    public Pipe(String fileName) {
+    public Tile(String fileName) {
         super("file:res/" + fileName);
     }
 
