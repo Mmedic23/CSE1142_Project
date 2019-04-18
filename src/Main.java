@@ -1,8 +1,12 @@
 import javafx.application.Application;
+import javafx.event.EventHandler;
 import javafx.geometry.Pos;
+import javafx.scene.Group;
 import javafx.scene.Scene;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
 
 import java.io.File;
@@ -24,8 +28,13 @@ public class Main extends Application {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
+
+        Pane rootPane = new Pane();
         GridPane mainGrid = new GridPane();
-        Scene mainScene = new Scene(mainGrid);
+        Group dragGroup = new Group();
+        rootPane.getChildren().addAll(mainGrid, dragGroup);
+        Scene mainScene = new Scene(rootPane);
+
         int startPipe = 0;
         int endPipe = 0;
         // assert levelScanner != null;
@@ -109,6 +118,30 @@ public class Main extends Application {
             currentBox += moveValue;
         }
         System.out.println(currentBox);
+        // START WIP ZONE
+        Tile tileToDrag = (Tile) mainGrid.getChildren().get(13);
+        tileToDrag.setOnMousePressed(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent mouseEvent) {
+                mainGrid.getChildren().remove(tileToDrag);
+                dragGroup.getChildren().add(tileToDrag);
+            }
+        });
+        tileToDrag.setOnMouseDragged(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent mouseEvent) {
+                tileToDrag.setX(mouseEvent.getX());
+                tileToDrag.setY(mouseEvent.getY());
+            }
+        });
+        tileToDrag.setOnMouseReleased(new EventHandler<MouseEvent>() {
+            @Override
+            public void handle(MouseEvent mouseEvent) {
+                dragGroup.getChildren().remove(tileToDrag);
+                mainGrid.getChildren().add(tileToDrag);
+            }
+        });
+        // END WIP ZONE
         mainGrid.setAlignment(Pos.CENTER);
         stage.setScene(mainScene);
         stage.show();
