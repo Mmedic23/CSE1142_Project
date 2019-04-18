@@ -3,16 +3,16 @@ class BentPipe extends Tile {
         super((isStatic ? "s_" : "") + type + ".png");
         switch (type) {
             case "00":
-                setValues(-4, 0, -1, 0);
+                setValues(-4, Integer.MIN_VALUE, -1, Integer.MIN_VALUE);
                 break;
             case "01":
-                setValues(0, -4, 1, 0);
+                setValues(Integer.MIN_VALUE, -4, 1, Integer.MIN_VALUE);
                 break;
             case "10":
-                setValues(4, 0, 0, -1);
+                setValues(4, Integer.MIN_VALUE, Integer.MIN_VALUE, -1);
                 break;
             case "11":
-                setValues(0, 4, 0, 1);
+                setValues(Integer.MIN_VALUE, 4, Integer.MIN_VALUE, 1);
                 break;
         }
         /*

@@ -4,8 +4,8 @@ public class EndPipe extends Tile {
         //TODO these values should be reconsidered for balls getting stuck on a previous pipe vs.
         //                                             balls getting stuck INSIDE the pipe.
         if (isVertical)
-            setValues(0, 0, 0, 0);
+            setValues(Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE, 0);
         else
-            setValues(0, 0, 0, 0);
+            setValues(0, Integer.MIN_VALUE, Integer.MIN_VALUE, Integer.MIN_VALUE);
     }
 }

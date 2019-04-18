@@ -40,7 +40,7 @@ public class Main extends Application {
             pepe.fitHeightProperty().bind(mainScene.heightProperty().divide(4.0));
             pepe.setPreserveRatio(true);
 
-            if (inputArgs[1].startsWith("Tile")) {
+            if (inputArgs[1].startsWith("Pipe")) {
                 boolean isStatic = inputArgs[1].length() > 4;
                 if (inputArgs[2].equals("Vertical"))
                     tileToAdd = new VerticalPipe(isStatic);
@@ -70,6 +70,13 @@ public class Main extends Application {
                 mainGrid.add(tileToAdd, column, row);
                 endPipe = row * 4 + column;
             }
+            else if (inputArgs[1].equals("Empty")) {
+                tileToAdd = new EmptyTile(inputArgs[2].equals("Free"));
+                tileToAdd.fitWidthProperty().bind(mainScene.widthProperty().divide(4.0));
+                tileToAdd.fitHeightProperty().bind(mainScene.heightProperty().divide(4.0));
+                tileToAdd.setPreserveRatio(true);
+                mainGrid.add(tileToAdd, column, row);
+            }
             else {
                 mainGrid.add(pepe, column, row);
             }
@@ -77,7 +84,7 @@ public class Main extends Application {
 
         int lastBox = 0;
         int currentBox = 4;
-        while (currentBox != endPipe) {
+        while (true) {
             int diff = currentBox - lastBox;
             int enteredFrom;
             if (diff == 4)
@@ -90,8 +97,11 @@ public class Main extends Application {
                 enteredFrom = Tile.BOTTOM;
 
             int moveValue = ((Tile) mainGrid.getChildren().get(currentBox)).values[enteredFrom];
-            if (moveValue == 0) {
+            if (moveValue == Integer.MIN_VALUE) {
                 currentBox = lastBox;
+                break;
+            }
+            if (moveValue == 0) {
                 break;
             }
 

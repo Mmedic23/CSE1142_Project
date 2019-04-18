@@ -2,8 +2,8 @@ public class StartPipe extends Tile {
     StartPipe(boolean isVertical) {
         super("start_" + (isVertical ? "vertical" : "horizontal") + ".png");
         if (isVertical)
-            setValues(0, 0, 4, 0);
+            setValues(Integer.MIN_VALUE, Integer.MIN_VALUE, 4, Integer.MIN_VALUE);
         else
-            setValues(0, -1, 0, 0);
+            setValues(Integer.MIN_VALUE, -1, Integer.MIN_VALUE, Integer.MIN_VALUE);
     }
 }
