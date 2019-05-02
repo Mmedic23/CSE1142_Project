@@ -2,11 +2,13 @@ import javafx.application.Application;
 import javafx.event.EventHandler;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 
 import java.io.File;
@@ -14,6 +16,9 @@ import java.io.FileNotFoundException;
 import java.util.Scanner;
 
 public class Main extends Application {
+
+    int removedFromRow;
+    int removedFromColumn;
 
     public static void main(String[] args) {
         launch(args);
@@ -34,6 +39,9 @@ public class Main extends Application {
         Group dragGroup = new Group();
         rootPane.getChildren().addAll(mainGrid, dragGroup);
         Scene mainScene = new Scene(rootPane);
+        mainScene.setFill(Color.BLACK);
+        rootPane.layoutXProperty().bind(mainScene.widthProperty().subtract(mainGrid.widthProperty()).divide(2));
+        rootPane.layoutYProperty().bind(mainScene.heightProperty().subtract(mainGrid.heightProperty()).divide(2));
 
         int startPipe = 0;
         int endPipe = 0;
@@ -56,7 +64,7 @@ public class Main extends Application {
                 else if (inputArgs[2].equals("Horizontal"))
                     tileToAdd = new HorizontalPipe(isStatic);
                 else
-                    tileToAdd = new BentPipe(isStatic, inputArgs[2]);
+                    tileToAdd = new BentPipe(inputArgs[2]);
                 tileToAdd.fitWidthProperty().bind(mainScene.widthProperty().divide(4.0));
                 tileToAdd.fitHeightProperty().bind(mainScene.heightProperty().divide(4.0));
                 tileToAdd.setPreserveRatio(true);
@@ -119,28 +127,58 @@ public class Main extends Application {
         }
         System.out.println(currentBox);
         // START WIP ZONE
-        Tile tileToDrag = (Tile) mainGrid.getChildren().get(13);
-        tileToDrag.setOnMousePressed(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent mouseEvent) {
-                mainGrid.getChildren().remove(tileToDrag);
-                dragGroup.getChildren().add(tileToDrag);
-            }
-        });
-        tileToDrag.setOnMouseDragged(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent mouseEvent) {
-                tileToDrag.setX(mouseEvent.getX());
-                tileToDrag.setY(mouseEvent.getY());
-            }
-        });
-        tileToDrag.setOnMouseReleased(new EventHandler<MouseEvent>() {
-            @Override
-            public void handle(MouseEvent mouseEvent) {
-                dragGroup.getChildren().remove(tileToDrag);
-                mainGrid.getChildren().add(tileToDrag);
-            }
-        });
+        for (Node tile : mainGrid.getChildren()) {
+            Tile tileToDrag = (Tile) tile;
+            if (tileToDrag.isStatic)
+                continue;
+            tileToDrag.setOnMousePressed(new EventHandler<MouseEvent>() {
+                @Override
+                public void handle(MouseEvent mouseEvent) {
+                    double cellWidth = mainGrid.getWidth() / 4;
+                    int row = (int) (mouseEvent.getSceneY() / cellWidth);
+                    int column = (int) (mouseEvent.getSceneX() / cellWidth);
+                    removedFromRow = row;
+                    removedFromColumn = column;
+                    EmptyTile emptyTile = new EmptyTile(true);
+                    emptyTile.fitWidthProperty().bind(mainScene.widthProperty().divide(4.0));
+                    emptyTile.fitHeightProperty().bind(mainScene.heightProperty().divide(4.0));
+                    emptyTile.setPreserveRatio(true);
+
+                    mainGrid.getChildren().remove(tileToDrag);
+                    mainGrid.add(emptyTile, column, row);
+                    dragGroup.getChildren().add(tileToDrag);
+                }
+            });
+            tileToDrag.setOnMouseDragged(new EventHandler<MouseEvent>() {
+                @Override
+                public void handle(MouseEvent mouseEvent) {
+                    tileToDrag.setX(mouseEvent.getX());
+                    tileToDrag.setY(mouseEvent.getY());
+                }
+            });
+            tileToDrag.setOnMouseReleased(new EventHandler<MouseEvent>() {
+                @Override
+                public void handle(MouseEvent mouseEvent) {
+                    double cellWidth = mainGrid.getWidth() / 4;
+                    int row = (int) (mouseEvent.getSceneY() / cellWidth);
+                    int column = (int) (mouseEvent.getSceneX() / cellWidth);
+                    Tile tileToRemove = null;
+                    for (Node tile : mainGrid.getChildren()) {
+                        if (GridPane.getRowIndex(tile) == row && GridPane.getColumnIndex(tile) == column)
+                            tileToRemove = (Tile) tile;
+                    }
+                    dragGroup.getChildren().remove(tileToDrag);
+                    if (tileToRemove instanceof EmptyTile && tileToRemove.isStatic) {
+                        if (tileToRemove != null)
+                            mainGrid.getChildren().remove(tileToRemove);
+                        mainGrid.add(tileToDrag, column, row);
+                    }
+                    else {
+                        mainGrid.add(tileToDrag, removedFromColumn, removedFromRow);
+                    }
+                }
+            });
+        }
         // END WIP ZONE
         mainGrid.setAlignment(Pos.CENTER);
         stage.setScene(mainScene);

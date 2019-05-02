@@ -1,6 +1,6 @@
 class BentPipe extends Tile {
-    BentPipe(boolean isStatic, String type) {
-        super((isStatic ? "s_" : "") + type + ".png");
+    BentPipe(String type) {
+        super(type + ".png");
         switch (type) {
             case "00":
                 setValues(-4, Integer.MIN_VALUE, -1, Integer.MIN_VALUE);

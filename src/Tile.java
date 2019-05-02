@@ -15,6 +15,7 @@ public abstract class Tile extends ImageView {
     static final int TOP = 2;
     static final int BOTTOM = 3;
 
+
     boolean isStatic = false;
     int[] values = new int[4];
 
