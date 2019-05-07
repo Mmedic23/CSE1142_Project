@@ -13,12 +13,15 @@ import javafx.stage.Stage;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
 import java.util.Scanner;
 
 public class Main extends Application {
 
     int removedFromRow;
     int removedFromColumn;
+    private int removedFromIndex;
+    ArrayList<Tile> allTiles = new ArrayList<>();
 
     public static void main(String[] args) {
         launch(args);
@@ -99,36 +102,10 @@ public class Main extends Application {
             }
         }
 
-        int lastBox = 0;
-        int currentBox = 4;
-        while (true) {
-            int diff = currentBox - lastBox;
-            int enteredFrom;
-            if (diff == 4)
-                enteredFrom = Tile.TOP;
-            else if (diff == 1)
-                enteredFrom = Tile.LEFT;
-            else if (diff == -1)
-                enteredFrom = Tile.RIGHT;
-            else
-                enteredFrom = Tile.BOTTOM;
-
-            int moveValue = ((Tile) mainGrid.getChildren().get(currentBox)).values[enteredFrom];
-            if (moveValue == Integer.MIN_VALUE) {
-                currentBox = lastBox;
-                break;
-            }
-            if (moveValue == 0) {
-                break;
-            }
-
-            lastBox = currentBox;
-            currentBox += moveValue;
-        }
-        System.out.println(currentBox);
         // START WIP ZONE
         for (Node tile : mainGrid.getChildren()) {
             Tile tileToDrag = (Tile) tile;
+            allTiles.add(tileToDrag);
             if (tileToDrag.isStatic)
                 continue;
             tileToDrag.setOnMousePressed(new EventHandler<MouseEvent>() {
@@ -147,13 +124,16 @@ public class Main extends Application {
                     mainGrid.getChildren().remove(tileToDrag);
                     mainGrid.add(emptyTile, column, row);
                     dragGroup.getChildren().add(tileToDrag);
+                    removedFromIndex = (row * 4) + column;
+                    allTiles.remove(removedFromIndex);
+                    allTiles.add(removedFromIndex, emptyTile);
                 }
             });
             tileToDrag.setOnMouseDragged(new EventHandler<MouseEvent>() {
                 @Override
                 public void handle(MouseEvent mouseEvent) {
-                    tileToDrag.setX(mouseEvent.getX());
-                    tileToDrag.setY(mouseEvent.getY());
+                    tileToDrag.setX(mouseEvent.getX() - 50);
+                    tileToDrag.setY(mouseEvent.getY() - 50);
                 }
             });
             tileToDrag.setOnMouseReleased(new EventHandler<MouseEvent>() {
@@ -164,18 +144,26 @@ public class Main extends Application {
                     int column = (int) (mouseEvent.getSceneX() / cellWidth);
                     Tile tileToRemove = null;
                     for (Node tile : mainGrid.getChildren()) {
-                        if (GridPane.getRowIndex(tile) == row && GridPane.getColumnIndex(tile) == column)
+                        if (GridPane.getRowIndex(tile) == row && GridPane.getColumnIndex(tile) == column) {
                             tileToRemove = (Tile) tile;
+                            break;
+                        }
                     }
                     dragGroup.getChildren().remove(tileToDrag);
-                    if (tileToRemove instanceof EmptyTile && tileToRemove.isStatic) {
-                        if (tileToRemove != null)
-                            mainGrid.getChildren().remove(tileToRemove);
+                    if (tileToRemove instanceof EmptyTile && tileToRemove.isStatic && ((removedFromColumn - column) + (removedFromRow - row) == 1 || (removedFromColumn - column) + (removedFromRow - row) == -1)) {
+                        mainGrid.getChildren().remove(tileToRemove);
                         mainGrid.add(tileToDrag, column, row);
+                        removedFromIndex = (row * 4) + column;
+                        allTiles.remove(removedFromIndex);
+                        allTiles.add(removedFromIndex, tileToDrag);
                     }
                     else {
                         mainGrid.add(tileToDrag, removedFromColumn, removedFromRow);
+                        removedFromIndex = (removedFromRow * 4) + removedFromColumn;
+                        allTiles.remove(removedFromIndex);
+                        allTiles.add(removedFromIndex, tileToDrag);
                     }
+                    CheckPath(mainGrid);
                 }
             });
         }
@@ -183,5 +171,35 @@ public class Main extends Application {
         mainGrid.setAlignment(Pos.CENTER);
         stage.setScene(mainScene);
         stage.show();
+    }
+
+    private void CheckPath(GridPane mainGrid) {
+        int lastBox = 0;
+        int currentBox = 4;
+        while (true) {
+            int diff = currentBox - lastBox;
+            int enteredFrom;
+            if (diff == 4)
+                enteredFrom = Tile.TOP;
+            else if (diff == 1)
+                enteredFrom = Tile.LEFT;
+            else if (diff == -1)
+                enteredFrom = Tile.RIGHT;
+            else
+                enteredFrom = Tile.BOTTOM;
+
+            int moveValue = allTiles.get(currentBox).values[enteredFrom];
+            if (moveValue == Integer.MIN_VALUE) {
+                currentBox = lastBox;
+                break;
+            }
+            if (moveValue == 0) {
+                break;
+            }
+
+            lastBox = currentBox;
+            currentBox += moveValue;
+        }
+        System.out.println(currentBox);
     }
 }
