@@ -1,4 +1,4 @@
-public class EmptyTile extends Tile {
+class EmptyTile extends Tile {
     EmptyTile(boolean isStatic) {
         super((isStatic ? "s_" : "") + "empty.png");
         this.isStatic = isStatic;
