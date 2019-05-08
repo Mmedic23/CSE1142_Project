@@ -43,8 +43,8 @@ public class Main extends Application {
         rootPane.getChildren().addAll(mainGrid, dragGroup);
         Scene mainScene = new Scene(rootPane);
         mainScene.setFill(Color.BLACK);
-        rootPane.layoutXProperty().bind(mainScene.widthProperty().subtract(mainGrid.widthProperty()).divide(2));
-        rootPane.layoutYProperty().bind(mainScene.heightProperty().subtract(mainGrid.heightProperty()).divide(2));
+        rootPane.layoutXProperty().bind(mainScene.widthProperty().subtract(mainGrid.widthProperty()).divide(2.0));
+        rootPane.layoutYProperty().bind(mainScene.heightProperty().subtract(mainGrid.heightProperty()).divide(2.0));
 
         int startPipe = 0;
         int endPipe = 0;
@@ -112,8 +112,11 @@ public class Main extends Application {
                 @Override
                 public void handle(MouseEvent mouseEvent) {
                     double cellWidth = mainGrid.getWidth() / 4;
-                    int row = (int) (mouseEvent.getSceneY() / cellWidth);
-                    int column = (int) (mouseEvent.getSceneX() / cellWidth);
+                    double xMargin = (mainScene.getWidth() - mainGrid.getWidth()) / 2.0;
+                    double yMargin = (mainScene.getHeight() - mainGrid.getHeight()) / 2.0;
+                    int row = (int) ((mouseEvent.getSceneY() - yMargin ) / cellWidth);
+                    int column = (int) ((mouseEvent.getSceneX() - xMargin ) / cellWidth);
+                    //System.out.printf("Scene width: %f Scene height: %f\nGrid width: %f Grid height: %f\nX Margin: %f Y Margin: %f\n\n", mainScene.getWidth(), mainScene.getHeight(), mainGrid.getWidth(), mainGrid.getHeight() ,xMargin, yMargin);
                     removedFromRow = row;
                     removedFromColumn = column;
                     EmptyTile emptyTile = new EmptyTile(true);
@@ -132,16 +135,18 @@ public class Main extends Application {
             tileToDrag.setOnMouseDragged(new EventHandler<MouseEvent>() {
                 @Override
                 public void handle(MouseEvent mouseEvent) {
-                    tileToDrag.setX(mouseEvent.getX() - 50);
-                    tileToDrag.setY(mouseEvent.getY() - 50);
+                    tileToDrag.setX(mouseEvent.getX() - mainGrid.getWidth() / 8.0);
+                    tileToDrag.setY(mouseEvent.getY() - mainGrid.getHeight() / 8.0);
                 }
             });
             tileToDrag.setOnMouseReleased(new EventHandler<MouseEvent>() {
                 @Override
                 public void handle(MouseEvent mouseEvent) {
                     double cellWidth = mainGrid.getWidth() / 4;
-                    int row = (int) (mouseEvent.getSceneY() / cellWidth);
-                    int column = (int) (mouseEvent.getSceneX() / cellWidth);
+                    double xMargin = (mainScene.getWidth() - mainGrid.getWidth()) / 2.0;
+                    double yMargin = (mainScene.getHeight() - mainGrid.getHeight()) / 2.0;
+                    int row = (int) ((mouseEvent.getSceneY() - yMargin ) / cellWidth);
+                    int column = (int) ((mouseEvent.getSceneX() - xMargin ) / cellWidth);
                     Tile tileToRemove = null;
                     for (Node tile : mainGrid.getChildren()) {
                         if (GridPane.getRowIndex(tile) == row && GridPane.getColumnIndex(tile) == column) {
@@ -200,6 +205,6 @@ public class Main extends Application {
             lastBox = currentBox;
             currentBox += moveValue;
         }
-        System.out.println(currentBox);
+        //System.out.println(currentBox);
     }
 }
