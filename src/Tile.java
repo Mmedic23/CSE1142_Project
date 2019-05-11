@@ -1,4 +1,9 @@
+
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.GridPane;
+import javafx.scene.shape.LineTo;
+import javafx.scene.shape.Shape;
+import javafx.scene.shape.VLineTo;
 
 public abstract class Tile extends ImageView {
     /*
@@ -29,4 +34,6 @@ public abstract class Tile extends ImageView {
         values[2] = top;
         values[3] = bottom;
     }
+
+    //public abstract LineTo createPath(GridPane mainGrid, int cellIndex);
 }

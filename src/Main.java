@@ -1,3 +1,5 @@
+import javafx.animation.PathTransition;
+import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.event.EventHandler;
 import javafx.geometry.Pos;
@@ -9,10 +11,16 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
+
+import javafx.scene.shape.Line;
+import javafx.scene.shape.Path;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -21,7 +29,9 @@ public class Main extends Application {
     int removedFromRow;
     int removedFromColumn;
     private int removedFromIndex;
+    GridPane mainGrid = new GridPane();
     ArrayList<Tile> allTiles = new ArrayList<>();
+
 
     public static void main(String[] args) {
         launch(args);
@@ -38,7 +48,7 @@ public class Main extends Application {
         }
 
         Pane rootPane = new Pane();
-        GridPane mainGrid = new GridPane();
+
         Group dragGroup = new Group();
         rootPane.getChildren().addAll(mainGrid, dragGroup);
         Scene mainScene = new Scene(rootPane);
@@ -72,8 +82,7 @@ public class Main extends Application {
                 tileToAdd.fitHeightProperty().bind(mainScene.heightProperty().divide(4.0));
                 tileToAdd.setPreserveRatio(true);
                 mainGrid.add(tileToAdd, column, row);
-            }
-            else if (inputArgs[1].equals("Starter")) {
+            } else if (inputArgs[1].equals("Starter")) {
                 tileToAdd = new StartPipe(inputArgs[2].equals("Vertical"));
                 //TODO eliminate copy-pasted code
                 tileToAdd.fitWidthProperty().bind(mainScene.widthProperty().divide(4.0));
@@ -81,23 +90,20 @@ public class Main extends Application {
                 tileToAdd.setPreserveRatio(true);
                 mainGrid.add(tileToAdd, column, row);
                 startPipe = row * 4 + column;
-            }
-            else if (inputArgs[1].equals("End")) {
+            } else if (inputArgs[1].equals("End")) {
                 tileToAdd = new EndPipe(inputArgs[2].equals("Vertical"));
                 tileToAdd.fitWidthProperty().bind(mainScene.widthProperty().divide(4.0));
                 tileToAdd.fitHeightProperty().bind(mainScene.heightProperty().divide(4.0));
                 tileToAdd.setPreserveRatio(true);
                 mainGrid.add(tileToAdd, column, row);
                 endPipe = row * 4 + column;
-            }
-            else if (inputArgs[1].equals("Empty")) {
+            } else if (inputArgs[1].equals("Empty")) {
                 tileToAdd = new EmptyTile(inputArgs[2].equals("Free"));
                 tileToAdd.fitWidthProperty().bind(mainScene.widthProperty().divide(4.0));
                 tileToAdd.fitHeightProperty().bind(mainScene.heightProperty().divide(4.0));
                 tileToAdd.setPreserveRatio(true);
                 mainGrid.add(tileToAdd, column, row);
-            }
-            else {
+            } else {
                 mainGrid.add(pepe, column, row);
             }
         }
@@ -114,8 +120,8 @@ public class Main extends Application {
                     double cellWidth = mainGrid.getWidth() / 4;
                     double xMargin = (mainScene.getWidth() - mainGrid.getWidth()) / 2.0;
                     double yMargin = (mainScene.getHeight() - mainGrid.getHeight()) / 2.0;
-                    int row = (int) ((mouseEvent.getSceneY() - yMargin ) / cellWidth);
-                    int column = (int) ((mouseEvent.getSceneX() - xMargin ) / cellWidth);
+                    int row = (int) ((mouseEvent.getSceneY() - yMargin) / cellWidth);
+                    int column = (int) ((mouseEvent.getSceneX() - xMargin) / cellWidth);
                     //System.out.printf("Scene width: %f Scene height: %f\nGrid width: %f Grid height: %f\nX Margin: %f Y Margin: %f\n\n", mainScene.getWidth(), mainScene.getHeight(), mainGrid.getWidth(), mainGrid.getHeight() ,xMargin, yMargin);
                     removedFromRow = row;
                     removedFromColumn = column;
@@ -145,8 +151,8 @@ public class Main extends Application {
                     double cellWidth = mainGrid.getWidth() / 4;
                     double xMargin = (mainScene.getWidth() - mainGrid.getWidth()) / 2.0;
                     double yMargin = (mainScene.getHeight() - mainGrid.getHeight()) / 2.0;
-                    int row = (int) ((mouseEvent.getSceneY() - yMargin ) / cellWidth);
-                    int column = (int) ((mouseEvent.getSceneX() - xMargin ) / cellWidth);
+                    int row = (int) ((mouseEvent.getSceneY() - yMargin) / cellWidth);
+                    int column = (int) ((mouseEvent.getSceneX() - xMargin) / cellWidth);
                     Tile tileToRemove = null;
                     for (Node tile : mainGrid.getChildren()) {
                         if (GridPane.getRowIndex(tile) == row && GridPane.getColumnIndex(tile) == column) {
@@ -161,8 +167,7 @@ public class Main extends Application {
                         removedFromIndex = (row * 4) + column;
                         allTiles.remove(removedFromIndex);
                         allTiles.add(removedFromIndex, tileToDrag);
-                    }
-                    else {
+                    } else {
                         mainGrid.add(tileToDrag, removedFromColumn, removedFromRow);
                         removedFromIndex = (removedFromRow * 4) + removedFromColumn;
                         allTiles.remove(removedFromIndex);
@@ -181,17 +186,35 @@ public class Main extends Application {
     private void CheckPath(GridPane mainGrid) {
         int lastBox = 0;
         int currentBox = 4;
+
+        ArrayList<Integer> pathList = new ArrayList<>();
+        pathList.add(0);
         while (true) {
             int diff = currentBox - lastBox;
             int enteredFrom;
-            if (diff == 4)
+            if (diff == 4) {
                 enteredFrom = Tile.TOP;
-            else if (diff == 1)
+                if(allTiles.get(currentBox) instanceof BentPipe && ((BentPipe) allTiles.get(currentBox)).getType().equals("00"))
+                    pathList.add(-currentBox);
+                else
+                    pathList.add(currentBox);
+
+            } else if (diff == 1) {
                 enteredFrom = Tile.LEFT;
-            else if (diff == -1)
+                pathList.add(currentBox);
+
+            } else if (diff == -1) {
                 enteredFrom = Tile.RIGHT;
-            else
+                pathList.add(-currentBox);
+
+            } else {
                 enteredFrom = Tile.BOTTOM;
+                if(allTiles.get(currentBox) instanceof BentPipe && ((BentPipe) allTiles.get(currentBox)).getType().equals("11"))
+                    pathList.add(currentBox);
+                else
+                    pathList.add(-currentBox);
+
+            }
 
             int moveValue = allTiles.get(currentBox).values[enteredFrom];
             if (moveValue == Integer.MIN_VALUE) {
@@ -199,12 +222,51 @@ public class Main extends Application {
                 break;
             }
             if (moveValue == 0) {
+                startAnimation(pathList);
                 break;
             }
 
             lastBox = currentBox;
             currentBox += moveValue;
         }
-        //System.out.println(currentBox);
+        System.out.println(currentBox);
+    }
+
+    private void startAnimation(ArrayList<Integer> pathList) {
+        Path path = new Path();
+        double cellHeight = mainGrid.getHeight() / 4;
+        double cellWidth = mainGrid.getWidth() / 4;
+        int cellRow = Math.abs(pathList.get(0)) / 4;
+        int cellColumn = Math.abs(Math.abs(pathList.get(0))) % 4;
+
+        Circle circle = new Circle((cellWidth / 2 + cellColumn * cellWidth), (cellHeight / 2 + cellRow * cellHeight), 10);
+        circle.setFill(Color.YELLOW);
+        mainGrid.getChildren().add(circle);
+        PathTransition pathTransition = new PathTransition();
+        path.getElements().add(((StartPipe) allTiles.get(Math.abs(pathList.get(0)))).starterMoveTo(mainGrid, pathList.get(0)));
+
+        for (int i = 0; i < pathList.size(); i++) {
+            if (allTiles.get(Math.abs(pathList.get(i))) instanceof StartPipe)
+                path.getElements().add(((StartPipe) allTiles.get(Math.abs(pathList.get(i)))).createPath(mainGrid, pathList.get(i)));
+            else if (allTiles.get(Math.abs(pathList.get(i))) instanceof VerticalPipe)
+                path.getElements().add(((VerticalPipe) allTiles.get(Math.abs(pathList.get(i)))).createPath(mainGrid, pathList.get(i)));
+            else if (allTiles.get(Math.abs(pathList.get(i))) instanceof HorizontalPipe)
+                path.getElements().add(((HorizontalPipe) allTiles.get(Math.abs(pathList.get(i)))).createPath(mainGrid, pathList.get(i)));
+            else if (allTiles.get(Math.abs(pathList.get(i))) instanceof BentPipe)
+                path.getElements().add(((BentPipe) allTiles.get(Math.abs(pathList.get(i)))).createPath(mainGrid, pathList.get(i)));
+            else
+                path.getElements().add(((EndPipe) allTiles.get(Math.abs(pathList.get(i)))).createPath(mainGrid, pathList.get(i)));
+
+        }
+
+        pathTransition.setPath(path);
+        pathTransition.setNode(circle);
+        pathTransition.setOrientation(PathTransition.OrientationType.ORTHOGONAL_TO_TANGENT);
+        pathTransition.setDuration(Duration.millis(7000));
+        pathTransition.setAutoReverse(true);
+        pathTransition.setCycleCount(Timeline.INDEFINITE);
+            pathTransition.play();
+
+
     }
 }
