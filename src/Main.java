@@ -1,3 +1,5 @@
+import javafx.animation.PathTransition;
+import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -12,8 +14,11 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
+import javafx.scene.shape.Path;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -47,7 +52,8 @@ public class Main extends Application {
         Scanner levelScanner;
         try {
             levelScanner = new Scanner(levelFile);
-        } catch (FileNotFoundException e) {
+        }
+        catch (FileNotFoundException e) {
             e.printStackTrace();
             return;
         }
@@ -92,13 +98,16 @@ public class Main extends Application {
                     tileToAdd = new HorizontalPipe(isStatic);
                 else
                     tileToAdd = new BentPipe(inputArgs[2]);
-            } else if (inputArgs[1].equals("Starter")) {
+            }
+            else if (inputArgs[1].equals("Starter")) {
                 tileToAdd = new StartPipe(inputArgs[2].equals("Vertical"));
                 startPipe = (row * 4) + column;
-            } else if (inputArgs[1].equals("End")) {
+            }
+            else if (inputArgs[1].equals("End")) {
                 tileToAdd = new EndPipe(inputArgs[2].equals("Vertical"));
                 endPipe = (row * 4) + column;
-            } else if (inputArgs[1].equals("Empty")) {
+            }
+            else if (inputArgs[1].equals("Empty")) {
                 tileToAdd = new EmptyTile(inputArgs[2].equals("Free"));
             }
             // Will not produce NullPointerException as long as level file is in correct format.
@@ -162,7 +171,8 @@ public class Main extends Application {
                     allTiles.remove(removedFromIndex);
                     allTiles.add(removedFromIndex, tileToDrag);
                     numberOfMoves.setValue(numberOfMoves.add(1).getValue());
-                } else {
+                }
+                else {
                     mainGrid.add(tileToDrag, removedFromColumn, removedFromRow);
                     removedFromIndex = (removedFromRow * 4) + removedFromColumn;
                     allTiles.remove(removedFromIndex);
@@ -176,17 +186,35 @@ public class Main extends Application {
     private void checkPath() {
         int lastBox = startPipe;
         int currentBox = startPipe + (allTiles.get(lastBox).values[Tile.TOP] == 4 ? 4 : -1);
+
+        ArrayList<Integer> pathList = new ArrayList<>();
+        pathList.add(startPipe);
+
         while (true) {
             int diff = currentBox - lastBox;
             int enteredFrom;
-            if (diff == 4)
+            if (diff == 4) {
                 enteredFrom = Tile.TOP;
-            else if (diff == 1)
+                if (allTiles.get(currentBox) instanceof BentPipe && ((BentPipe) allTiles.get(currentBox)).getType().equals("00"))
+                    pathList.add(-currentBox);
+                else
+                    pathList.add(currentBox);
+            }
+            else if (diff == 1) {
                 enteredFrom = Tile.LEFT;
-            else if (diff == -1)
+                pathList.add(currentBox);
+            }
+            else if (diff == -1) {
                 enteredFrom = Tile.RIGHT;
-            else
+                pathList.add(-currentBox);
+            }
+            else {
                 enteredFrom = Tile.BOTTOM;
+                if (allTiles.get(currentBox) instanceof BentPipe && ((BentPipe) allTiles.get(currentBox)).getType().equals("11"))
+                    pathList.add(currentBox);
+                else
+                    pathList.add(-currentBox);
+            }
 
             int moveValue = allTiles.get(currentBox).values[enteredFrom];
             if (moveValue == Integer.MIN_VALUE) {
@@ -201,8 +229,45 @@ public class Main extends Application {
             currentBox += moveValue;
         }
         if (currentBox == endPipe) {
+            startAnimation(pathList);
             levelPassed();
         }
+    }
+
+    private void startAnimation(ArrayList<Integer> pathList) {
+        Path path = new Path();
+        double cellHeight = mainGrid.getHeight() / 4;
+        double cellWidth = mainGrid.getWidth() / 4;
+        int cellRow = Math.abs(pathList.get(0)) / 4;
+        int cellColumn = Math.abs(Math.abs(pathList.get(0))) % 4;
+
+        Circle circle = new Circle((cellWidth / 2 + cellColumn * cellWidth), (cellHeight / 2 + cellRow * cellHeight), 10);
+        circle.setFill(Color.YELLOW);
+        mainGrid.getChildren().add(circle);
+        PathTransition pathTransition = new PathTransition();
+        path.getElements().add(((StartPipe) allTiles.get(Math.abs(pathList.get(0)))).starterMoveTo(mainGrid, pathList.get(0)));
+
+        for (int i = 0; i < pathList.size(); i++) {
+            if (allTiles.get(Math.abs(pathList.get(i))) instanceof StartPipe)
+                path.getElements().add(((StartPipe) allTiles.get(Math.abs(pathList.get(i)))).createPath(mainGrid, pathList.get(i)));
+            else if (allTiles.get(Math.abs(pathList.get(i))) instanceof VerticalPipe)
+                path.getElements().add(((VerticalPipe) allTiles.get(Math.abs(pathList.get(i)))).createPath(mainGrid, pathList.get(i)));
+            else if (allTiles.get(Math.abs(pathList.get(i))) instanceof HorizontalPipe)
+                path.getElements().add(((HorizontalPipe) allTiles.get(Math.abs(pathList.get(i)))).createPath(mainGrid, pathList.get(i)));
+            else if (allTiles.get(Math.abs(pathList.get(i))) instanceof BentPipe)
+                path.getElements().add(((BentPipe) allTiles.get(Math.abs(pathList.get(i)))).createPath(mainGrid, pathList.get(i)));
+            else
+                path.getElements().add(((EndPipe) allTiles.get(Math.abs(pathList.get(i)))).createPath(mainGrid, pathList.get(i)));
+
+        }
+
+        pathTransition.setPath(path);
+        pathTransition.setNode(circle);
+        pathTransition.setOrientation(PathTransition.OrientationType.ORTHOGONAL_TO_TANGENT);
+        pathTransition.setDuration(Duration.millis(7000));
+        pathTransition.setAutoReverse(true);
+        pathTransition.setCycleCount(Timeline.INDEFINITE);
+        pathTransition.play();
     }
 
     private void levelPassed() {
@@ -266,7 +331,8 @@ public class Main extends Application {
             Scanner levelScanner;
             try {
                 levelScanner = new Scanner(nextLevel);
-            } catch (FileNotFoundException e) {
+            }
+            catch (FileNotFoundException e) {
                 //TODO Ask the user if they wish to continue with random levels.
                 e.printStackTrace();
                 return;
