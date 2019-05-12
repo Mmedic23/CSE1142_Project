@@ -1,0 +1,16 @@
+1,Empty,none
+2,Empty,Free
+3,Empty,Free
+4,Empty,Free
+5,Empty,Free
+6,Empty,Free
+7,Empty,Free
+8,Empty,Free
+9,Empty,Free
+10,Empty,Free
+11,Empty,Free
+12,Empty,Free
+13,Empty,Free
+14,Empty,Free
+15,Empty,Free
+16,Empty,Free

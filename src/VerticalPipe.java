@@ -14,7 +14,7 @@ class VerticalPipe extends Tile {
 
         int cellRow = Math.abs(cellIndex / 4);
         if (cellIndex > 0)
-            return new VLineTo((cellHeight + cellRow * cellHeight));
+            return new VLineTo(((cellRow + 1) * cellHeight));
         else
             return new VLineTo((cellRow * cellHeight));
     }

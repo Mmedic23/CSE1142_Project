@@ -23,7 +23,7 @@ class BentPipe extends Tile {
         }
     }
 
-    public ArcTo createPath(GridPane mainGrid, int cellIndex) {
+    ArcTo createPath(GridPane mainGrid, int cellIndex) {
         double cellWidth = mainGrid.getWidth() / 4;
         double cellHeight = mainGrid.getHeight() / 4;
         int cellRow = Math.abs(cellIndex / 4);
@@ -31,22 +31,30 @@ class BentPipe extends Tile {
 
         switch (this.pipeType) {
             case "00":
-                return new ArcTo(cellWidth * 0.7, cellHeight * 0.7, 0, (cellIndex > 0) ? (cellWidth / 2 + cellColumn * cellWidth) : (cellColumn * cellWidth),
-                        (cellIndex < 0) ? (cellHeight / 2 + (cellRow * cellHeight)) : (cellRow * cellHeight), false, cellIndex <= 0);
+                return new ArcTo(cellWidth * 0.5, cellHeight * 0.5, 0,
+                        (cellIndex < 0) ? (cellColumn * cellWidth) : (cellWidth / 2 + cellColumn * cellWidth),
+                        (cellIndex < 0) ? (cellHeight / 2 + (cellRow * cellHeight)) : (cellRow * cellHeight),
+                        false, cellIndex < 0);
             case "01":
-                return new ArcTo(cellWidth * 0.7, cellHeight * 0.7, 0, (cellIndex < 0) ? (cellWidth / 2 + cellColumn * cellWidth) : 1.5 * cellWidth + (cellColumn * cellWidth),
-                        (cellIndex > 0) ? (cellHeight / 2 + cellRow * cellHeight) : (cellRow * cellHeight), false, false);
+                return new ArcTo(cellWidth * 0.5, cellHeight * 0.5, 0,
+                        (cellIndex < 0) ? (cellWidth / 2 + cellColumn * cellWidth) : cellWidth + (cellColumn * cellWidth),
+                        (cellIndex < 0) ? (cellRow * cellHeight) : (cellHeight / 2 + cellRow * cellHeight),
+                        false, cellIndex < 0);
             case "10":
-                return new ArcTo(cellWidth * 0.7, cellHeight * 0.7, 0, (cellIndex > 0) ? (cellWidth + cellColumn * cellWidth) : (cellColumn * cellWidth),
-                        (cellIndex > 0) ? (cellHeight + cellRow * cellHeight) : cellHeight / 2 + (cellRow * cellHeight), false, true);
+                return new ArcTo(cellWidth * 0.5, cellHeight * 0.5, 0,
+                        (cellIndex < 0) ? (cellColumn * cellWidth) : cellWidth / 2 + (cellColumn * cellWidth),
+                        (cellIndex < 0) ? (cellHeight / 2 + cellRow * cellHeight) : cellHeight + (cellRow * cellHeight),
+                        false, cellIndex > 0);
             case "11":
-                return new ArcTo(cellWidth * 0.7, cellHeight * 0.7, 0, (cellIndex < 0) ? (cellWidth / 2 + cellColumn * cellWidth) : cellWidth + (cellColumn * cellWidth),
-                        (cellIndex > 0) ? (cellHeight / 2 + cellRow * cellHeight) : cellHeight + (cellRow * cellHeight), false, false);
+                return new ArcTo(cellWidth * 0.5, cellHeight * 0.5, 0,
+                        (cellIndex <= 0) ? (cellWidth + cellColumn * cellWidth) : cellWidth + (cellColumn * cellWidth),
+                        (cellIndex <= 0) ? cellHeight / 2 + (cellRow * cellHeight) : (cellHeight / 2 + cellRow * cellHeight),
+                        false, true);
         }
         return null;
     }
 
-    public String getType() {
+    String getType() {
         return pipeType;
     }
 }

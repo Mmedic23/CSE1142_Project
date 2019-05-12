@@ -1,10 +1,6 @@
 import javafx.animation.PathTransition;
-import javafx.animation.Timeline;
 import javafx.application.Application;
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
+import javafx.beans.property.*;
 import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -13,6 +9,8 @@ import javafx.scene.control.Label;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.Path;
@@ -27,9 +25,6 @@ import java.util.Scanner;
 
 public class Main extends Application {
 
-    //TODO There's a bug where a box can be moved onto a pipe, if the pipe is moved to an invalid position beforehand.
-    //TODO There's a bug where any block can be moved in an L shape
-
     private final ArrayList<Tile> allTiles = new ArrayList<>(); // final doesn't make the ArrayList contents final, just the reference of the ArrayList final.
     private GridPane mainGrid;
     private Scene mainScene;
@@ -41,6 +36,10 @@ public class Main extends Application {
     private int removedFromColumn;
     private int startPipe;
     private int endPipe;
+    private boolean nowPlaying = false;
+    private double animationDur = 5.0;
+    private MediaPlayer gasPlayer;
+    private BooleanProperty screenResizable = new SimpleBooleanProperty(true);
 
     public static void main(String[] args) {
         launch(args);
@@ -48,7 +47,7 @@ public class Main extends Application {
 
     @Override
     public void start(Stage stage) {
-        File levelFile = new File("res/level1.txt");
+        File levelFile = new File(String.format("res/level%d.txt", currentLevel.getValue()));
         Scanner levelScanner;
         try {
             levelScanner = new Scanner(levelFile);
@@ -71,11 +70,29 @@ public class Main extends Application {
         // TODO some good styling should be written in place of this line
         mainScene.setFill(Color.BLACK);
 
+        mainScene.setOnKeyTyped(keyEvent -> {
+            if (keyEvent.getCharacter().toLowerCase().equals("g")) {
+                if (!nowPlaying) {
+                    animationDur = 0.5;
+                    Media gasModeMedia = new Media(new File("res/gas.wav").toURI().toString());
+                    gasPlayer = new MediaPlayer(gasModeMedia);
+                    gasPlayer.play();
+                }
+                else {
+                    animationDur = 5;
+                    gasPlayer.stop();
+                    gasPlayer = null;
+                    nowPlaying = false;
+                }
+            }
+        });
+
         constructLevel(levelScanner);
         StringProperty gameTitle = new SimpleStringProperty("PLACEHOLDER GAME NAME - Level: ");
         StringProperty movesTitle = new SimpleStringProperty(" Moves: ");
         stage.titleProperty().bind(gameTitle.concat(currentLevel.asString()).concat(movesTitle).concat(numberOfMoves.asString()));
         stage.setScene(mainScene);
+        stage.resizableProperty().bindBidirectional(screenResizable);
         stage.show();
     }
 
@@ -157,14 +174,16 @@ public class Main extends Application {
                 int row = (int) ((mouseEvent.getSceneY() - yMargin) / cellWidth);
                 int column = (int) ((mouseEvent.getSceneX() - xMargin) / cellWidth);
                 Tile tileToRemove = null;
-                for (Node tile1 : mainGrid.getChildren()) {
-                    if (GridPane.getRowIndex(tile1) == row && GridPane.getColumnIndex(tile1) == column) {
-                        tileToRemove = (Tile) tile1;
+                for (Node tileChild : mainGrid.getChildren()) {
+                    if (GridPane.getRowIndex(tileChild) == row && GridPane.getColumnIndex(tileChild) == column) {
+                        tileToRemove = (Tile) tileChild;
                         break;
                     }
                 }
                 dragGroup.getChildren().remove(tileToDrag);
-                if (tileToRemove instanceof EmptyTile && tileToRemove.isStatic && ((removedFromColumn - column) + (removedFromRow - row) == 1 || (removedFromColumn - column) + (removedFromRow - row) == -1)) {
+                if (tileToRemove instanceof EmptyTile && tileToRemove.isStatic &&
+                        ((removedFromColumn - column) + (removedFromRow - row) == 1 || (removedFromColumn - column) + (removedFromRow - row) == -1) &&
+                        (removedFromRow == row || removedFromColumn == column)) {
                     mainGrid.getChildren().remove(tileToRemove);
                     mainGrid.add(tileToDrag, column, row);
                     removedFromIndex = (row * 4) + column;
@@ -173,8 +192,9 @@ public class Main extends Application {
                     numberOfMoves.setValue(numberOfMoves.add(1).getValue());
                 }
                 else {
-                    mainGrid.add(tileToDrag, removedFromColumn, removedFromRow);
                     removedFromIndex = (removedFromRow * 4) + removedFromColumn;
+                    mainGrid.getChildren().removeIf(t -> GridPane.getRowIndex(t) == removedFromRow && GridPane.getColumnIndex(t) == removedFromColumn);
+                    mainGrid.add(tileToDrag, removedFromColumn, removedFromRow);
                     allTiles.remove(removedFromIndex);
                     allTiles.add(removedFromIndex, tileToDrag);
                 }
@@ -230,7 +250,7 @@ public class Main extends Application {
         }
         if (currentBox == endPipe) {
             startAnimation(pathList);
-            levelPassed();
+            //levelPassed();
         }
     }
 
@@ -243,34 +263,44 @@ public class Main extends Application {
 
         Circle circle = new Circle((cellWidth / 2 + cellColumn * cellWidth), (cellHeight / 2 + cellRow * cellHeight), 10);
         circle.setFill(Color.YELLOW);
-        mainGrid.getChildren().add(circle);
+        dragGroup.getChildren().add(circle);
         PathTransition pathTransition = new PathTransition();
         path.getElements().add(((StartPipe) allTiles.get(Math.abs(pathList.get(0)))).starterMoveTo(mainGrid, pathList.get(0)));
 
-        for (int i = 0; i < pathList.size(); i++) {
-            if (allTiles.get(Math.abs(pathList.get(i))) instanceof StartPipe)
-                path.getElements().add(((StartPipe) allTiles.get(Math.abs(pathList.get(i)))).createPath(mainGrid, pathList.get(i)));
-            else if (allTiles.get(Math.abs(pathList.get(i))) instanceof VerticalPipe)
-                path.getElements().add(((VerticalPipe) allTiles.get(Math.abs(pathList.get(i)))).createPath(mainGrid, pathList.get(i)));
-            else if (allTiles.get(Math.abs(pathList.get(i))) instanceof HorizontalPipe)
-                path.getElements().add(((HorizontalPipe) allTiles.get(Math.abs(pathList.get(i)))).createPath(mainGrid, pathList.get(i)));
-            else if (allTiles.get(Math.abs(pathList.get(i))) instanceof BentPipe)
-                path.getElements().add(((BentPipe) allTiles.get(Math.abs(pathList.get(i)))).createPath(mainGrid, pathList.get(i)));
+        for (Integer pathValue : pathList) {
+            if (allTiles.get(Math.abs(pathValue)) instanceof StartPipe)
+                path.getElements().add(((StartPipe) allTiles.get(Math.abs(pathValue))).createPath(mainGrid, pathValue));
+            else if (allTiles.get(Math.abs(pathValue)) instanceof VerticalPipe)
+                path.getElements().add(((VerticalPipe) allTiles.get(Math.abs(pathValue))).createPath(mainGrid, pathValue));
+            else if (allTiles.get(Math.abs(pathValue)) instanceof HorizontalPipe)
+                path.getElements().add(((HorizontalPipe) allTiles.get(Math.abs(pathValue))).createPath(mainGrid, pathValue));
+            else if (allTiles.get(Math.abs(pathValue)) instanceof BentPipe)
+                path.getElements().add(((BentPipe) allTiles.get(Math.abs(pathValue))).createPath(mainGrid, pathValue));
             else
-                path.getElements().add(((EndPipe) allTiles.get(Math.abs(pathList.get(i)))).createPath(mainGrid, pathList.get(i)));
+                path.getElements().add(((EndPipe) allTiles.get(Math.abs(pathValue))).createPath(mainGrid, pathValue));
 
         }
 
         pathTransition.setPath(path);
         pathTransition.setNode(circle);
-        pathTransition.setOrientation(PathTransition.OrientationType.ORTHOGONAL_TO_TANGENT);
-        pathTransition.setDuration(Duration.millis(7000));
-        pathTransition.setAutoReverse(true);
-        pathTransition.setCycleCount(Timeline.INDEFINITE);
+        pathTransition.setDuration(Duration.seconds(animationDur));
+        pathTransition.setCycleCount(1);
+        pathTransition.setOnFinished(actionEvent -> {
+            //TODO maybe remove the ball and replace the end tile's picture with a finish_tile.png which has the ball on it? Because the ball disappears when the window is resized after the next level button is shown.
+            levelPassed();
+        });
+
+        for (Node child : mainGrid.getChildren()) {
+            child.setOnMousePressed(null);
+            child.setOnMouseDragged(null);
+            child.setOnMouseReleased(null);
+        }
+        screenResizable.set(false);
         pathTransition.play();
     }
 
     private void levelPassed() {
+        screenResizable.set(true);
         Pane winPane = new Pane();
         winPane.prefHeightProperty().bind(mainGrid.heightProperty());
         winPane.prefWidthProperty().bind(mainGrid.widthProperty());
@@ -325,7 +355,8 @@ public class Main extends Application {
         nextLevelBtn.setStyle("-fx-font-size: 16px; -fx-background-color: transparent; -fx-background-image: url('file:res/button_normal.png'); -fx-background-size: 100% 100%;");
         nextLevelBtn.setOnMousePressed(mouseEvent -> {
             // Construct the new level
-            dragGroup.getChildren().remove(winPane);
+            //dragGroup.getChildren().remove(winPane);
+            dragGroup.getChildren().clear();
             currentLevel.set(currentLevel.add(1).getValue());
             File nextLevel = new File(String.format("res/level%d.txt", currentLevel.getValue()));
             Scanner levelScanner;
