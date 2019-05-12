@@ -1,15 +1,10 @@
 import javafx.scene.image.ImageView;
 
+// The abstract Tile class is the superclass of all other classes in this program.
+// Each Tile object as 4 values, each corresponding to a direction the ball should move towards, when entered from a specified direction.
 abstract class Tile extends ImageView {
-    /*
-    public static final int VERTICAL = 0;
-    public static final int HORIZONTAL = 1;
-    public static final int BENT_UP_RIGHT = 2;
-    public static final int BENT_UP_LEFT = 3;
-    public static final int BENT_DOWN_RIGHT = 4;
-    public static final int BENT_DOWN_LEFT = 5;
-    */
-
+    // These constants are used to improve readability.
+    // They are used to get the appropriate value from the values array, when checking the path.
     static final int LEFT = 0;
     static final int RIGHT = 1;
     static final int TOP = 2;
