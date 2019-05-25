@@ -1,5 +1,4 @@
-# CSE 1142 - JavaFX Project
-## Dr. Sanem Arslan Yılmaz
+# CSE 1142 - JavaFX Project: Cringe Pane - Submitted To: Dr. Sanem Arslan Yılmaz
 
 To run this JavaFX program, you need Java 11 and JavaFX to be installed on your comuter. We used OpenJDK and OpenJFX while working on the project.
 
